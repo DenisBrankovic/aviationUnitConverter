@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Unit Converter</title>
+
+<style>
+	body{
+		width: 100vw;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0;
+		margin: 0;
+		background-color: #000;
+	}
+
+	/* The upper section, which displays the calculated results */
+
+	#display{
+		width: 95%;
+		height: 23vh;
+		margin: 10px 10px 10px 10px; 
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		background color: #fff;
+		border: solid darkgrey 2px; 
+		border-radius: 10px;
+		color: white;
+		font-family: Arial;
+	}
+	.txt{
+		background-color: white;
+		font-family: Arial;
+		font-size: 110%;
+	}
+	.txt:focus{
+		outline: none;
+	}
+	.txtDark{
+		background-color: black; 
+		border: solid darkgrey 1px;
+		font-family: Arial;
+		color: white; 
+	}
+	.txtDark:focus{
+		outline: none;
+	}
+	#sg{
+		margin-top: 5px; 
+	}
+	label, h3{
+    	font-family: Arial;
+    	color: white; 
+    }
+
+	/* The central button that does all the conversions and calculations */
+
+	#convertBtn{
+		width: 97%;
+		height: 10vh;
+		background-image: linear-gradient(to bottom, rgb(100, 100, 100),  rgb(0, 0, 0));
+		color: rgb(104, 247, 227);
+	}
+
+	/* The lower section containing all the unit buttons */
+
+	#unitsContainer{
+		width: 100%;
+		display: flex;
+	}
+	#unitsLeft{
+		width: 33%;
+		margin-top: 10px;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-around;
+	}
+	#unitsMiddle{
+		width: 33%;
+		margin-top: 10px;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-around;
+	}
+	#unitsRight{
+		width: 33%;
+		padding: 0;
+		margin-top: 10px;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-around; 
+	}
+	.unitButton{
+		width: 29vw;
+		height: 14vh;
+		margin: 5px; 
+		background-color: rgb(39, 39, 39); 
+		color: rgb(104, 247, 227); 
+		border-radius: 5px;
+        border: solid rgb(39, 39, 39);
+        font-family: Arial;
+    }
+    #enterBtn{
+    	width: 29vw;
+    	height: 29vh; 
+    	margin: 5px;
+    	background-color: rgb(39, 39, 39); 
+		color: rgb(104, 247, 227); 
+		border-radius: 5px;
+        border: solid rgb(39, 39, 39);
+        font-family: Arial;
+    }
+	/* Wind component span elements that are dynamically created */
+
+	.windUserInput{
+		color: lightyellow; 
+		font-size: 110%;
+		width: 100%;
+		text-align: center;
+		margin-bottom: 10px;
+		
+	}
+	.windResult{
+		color: white;
+		font-size: 110%;
+		width: 100%;
+		text-align: center;
+	}
+
+	/* Star time and end time inputs that are dynamically created */
+
+	#flightTime{
+		width: 100vw; 
+		display: flex;
+		justify-content: center; 
+		align-items: center;
+	}
+	#startTime, #endTime{
+		margin: 5px; 
+		font-size: 110%;
+		font-family: Arial;
+	}
+	#duration{
+		font-size: 110%;
+		font-family: Arial;
+		text-align: center;
+	}
+    .startEndTimes:focus{
+    	outline: none;
+    }
+    .fromTo{
+    	line-height: 15px;
+    	margin: 0; 
+    }
+</style>
+</head>
+<body>
+	<div id="display"></div>
+	<button id="convertBtn">Convert</button>
+	<div id="unitsContainer">
+		<div id="unitsLeft">
+			<button class="unitButton" id="weight" onclick="createTextBox(weightUnits, this, true)">Weight</button>
+			<button class="unitButton" id="speed" onclick="createTextBox(speedUnits, this, true)">Speed</button>
+			<button class="unitButton" id="isa" onclick="createTextBox(isaDevUnits, this, false)">ISA Deviation</button>
+			<button class="unitButton" id="wbv" onclick="createTextBox(torqueUnits, this, true)">Torque</button>
+		</div>
+		<div id="unitsMiddle">
+			<button class="unitButton" id="distance" onclick="createTextBox(distanceUnits, this, true)">Distance</button>
+			<button class="unitButton" id="time" onclick="createTextBox(flightDuration, this, false)">Time</button>
+			<button class="unitButton" id="volume" onclick="createTextBox(volumeUnits, this, true)">Volume</button>
+			<button class="unitButton" id="fuelWeightByVol" onclick="createTextBox(fuelWeightByVol, this, true)">Fuel</button>
+		</div>	
+		<div id="unitsRight">
+			<button class="unitButton" id="temperature" onclick="createTextBox(temperatureUnits, this, true)">Temperature</button>
+			<button class="unitButton" id="wind" onclick="createTextBox(windUnits, this, false)">Wind</button>
+			<button id="enterBtn">Enter</button>
+		</div>
+	</div>	
+	<script type="text/javascript">
+		var getDisplay = document.getElementById("display"); 
+		var getConvertBtn = document.getElementById("convertBtn");
+		var getEnterBtn = document.getElementById("enterBtn"); 
+		
+		//Unit lists are used in the createTextBox function to dynamically create a text input for each unit listed in the array. They are also used as ids of each text input as they are created. 
+
+		const weightUnits = ["Kilograms", "Pounds", "Ounces"]; 
+		const speedUnits = ["Knots", "kph", "mph"];
+		const temperatureUnits = ["Celsius", "Fahrenheit", "Kelvin"];
+		const isaDevUnits = ["Temperature (°C)", "Elevation (ft)", "ISA Deviation"]; 
+		const elevationTempUnits = ["Unit One", "Unit Two"];
+		//const ratesOfClimbDesc = ["Unit One", "Unit Two"];
+		const flightDuration = [];
+		const distanceUnits = ["Nautical Miles", "Kilometers", "Statute Miles", "Meters", "Feet"]; 
+		const volumeUnits = ["Liters", "gal_US", "gal_Imperial"];
+		const torqueUnits = ["Newton Metre", "Foot Pound", "Inch Pound"]; 
+		const windUnits = ["Runway direction", "Wind direction", "Wind speed"]; 
+		const fuelWeightByVol = ["SG", "Litres (Fuel)", "US Gallons (Fuel)", "Kilograms (Fuel)", "Pounds (Fuel)"]; 
+
+				
+		//Adds conversion event listeners to the Convert button and Enter button. 
+		(function (){
+			//List of all the conversion functions 
+			const allUnits = [weight, speed, temperature, isaDeviation, distance, volume, torque, windComponent, fuelWeightByVolume, millisecondsToHours]; 
+
+			for(var unit of allUnits){
+				getConvertBtn.addEventListener("click", unit); 
+				getEnterBtn.addEventListener("click", unit); 
+			}
+		})(); 
+
+
+		//Sets a border on the selected units button and removes it from a previoulsly selected one. This function is called in the createTextBox function. 
+
+		function markSelectedBtn(selectedBtn){
+
+			var elementId = selectedBtn.getAttribute("id"); 
+			var selectedButton = document.getElementById(elementId);
+			selectedButton.style.border = "solid lightyellow 1px";
+
+			const allButtons = document.getElementsByClassName("unitButton");
+
+			for(var btn of allButtons){
+				if(btn.getAttribute("id") !== elementId)btn.style.border = "none"; 
+			}
+		}
+
+		
+		//Removes previously created text boxes from the display. 
+
+		function clearDisplay(){
+			while(getDisplay.hasChildNodes()){
+				getDisplay.removeChild(getDisplay.firstChild);
+			}
+		}
+
+		//Gets all the dynamically created text inputs.
+		//They are used in createTextBox function and getUserInput function. 
+
+		const allTexts = document.getElementsByClassName("txt");
+
+				 
+		/*Creates a text box for every unit contained in respective units array. If clearValues is passed as true all text
+		boxes get cleared when any of them gets focus. If clearValues is passed as false, onfocus event isn't assigned. 
+		This function is assigned as an inline event listener in the HTML. */
+
+		function createTextBox(units, btn, clearValues){
+			
+			clearDisplay(); 
+
+			//Marks the unit button on selection. 
+			markSelectedBtn(btn); 
+
+			for(var i = 0; i < units.length; i++){
+				const newText = document.createElement("input");
+								 
+				newText.type = "text"; 
+				newText.setAttribute("placeholder", units[i]); 
+				newText.setAttribute("class", "txt"); 
+				newText.setAttribute("id", units[i]); 
+				
+				getDisplay.appendChild(newText); 
+								
+				if(clearValues){
+					getConvertBtn.innerHTML = "Convert";
+					for(var text of allTexts){
+						text.addEventListener("focus", function(){
+							for(var txt of allTexts){
+								if(txt.getAttribute("id") !== "SG")
+								txt.value = ""; 
+							}
+						});
+					}
+				} 
+			}
+		}	
+
+		//Loops through the text boxes and checks which one contains value. Returns an array containing the id and the value of that text box. This function essentially determines which unit user wants to convert and reads the value that was entered. 
+
+		function getUserInput(){
+			
+			const userInput = []; 
+
+			for(var txt of allTexts){
+				txt.value = txt.value.replace(",", "."); 
+				if(txt.value != "" && !isNaN(txt.value)){
+					userInput.push(txt.getAttribute("id"));
+					userInput.push(parseFloat(txt.value));
+				}
+			}
+			return userInput; 
+		}
+		
+		
+		function weight(){
+			const values = getUserInput();
+			let unit = values[0];
+			let quantity = values[1];
+
+			let kilograms;
+			let pounds;
+			let ounces;
+
+			var getKilograms = document.getElementById("Kilograms");
+			var getPounds = document.getElementById("Pounds");
+			var getOunces = document.getElementById("Ounces"); 
+
+			switch(unit){
+				case "Kilograms":
+				pounds = quantity * 2.20462;
+				ounces = quantity * 35.274;
+				getPounds.value = pounds.toFixed(2) + " lbs";
+				getKilograms.value = quantity + " kg";
+				getOunces.value = ounces.toFixed(2) + " oz."; 
+				break;
+
+				case "Pounds": 
+				kilograms = quantity / 2.20462;
+				ounces = quantity * 16; 
+				getKilograms.value = kilograms.toFixed(2) + " kg";
+				getPounds.value = quantity + " lbs";
+				getOunces.value = ounces.toFixed(2) + " oz.";
+				break; 
+
+				case "Ounces":
+				kilograms = quantity * 0.0283495; 
+				pounds = quantity * 0.0625; 
+				getKilograms.value = kilograms.toFixed(2) + " kg";
+				getPounds.value = pounds.toFixed(2) + " lbs";
+				getOunces.value = quantity + " oz."; 
+			}
+		}
+				
+		function speed(){
+
+			const values = getUserInput();
+			let unit = values[0];
+			let quantity = values[1];
+
+			let knots;
+			let kph;
+			let mph; 
+
+			var getKnots = document.getElementById("Knots");
+			var getKilometersPerHour = document.getElementById("kph"); 
+			var getMilesPerHour = document.getElementById("mph");
+			
+				switch(unit){
+					case "Knots":
+					kph = quantity * 1.852;
+					mph = quantity * 1.151; 
+
+					getKilometersPerHour.value = kph.toFixed(2) + " km/h"; 
+					getMilesPerHour.value = mph.toFixed(2) + " mi/h";
+					getKnots.value = quantity + " Knots"; 
+					break;
+
+					case "kph":
+					knots = quantity / 1.852;
+					mph = quantity / 1.609;
+
+					getKnots.value = knots.toFixed(2) + " Knots";
+					getMilesPerHour.value = mph.toFixed(2) + " mi/h"; 
+					getKilometersPerHour.value = quantity + " kph"; 
+					break;
+					
+					case "mph":
+					knots = quantity / 1.151;
+					kph = quantity * 1.609;
+					
+					getKnots.value = knots.toFixed(2) + " Knots";
+					getKilometersPerHour.value = kph.toFixed(2) + " km/h";
+					getMilesPerHour.value = quantity + " mi/h"; 
+					break; 					 
+				}
+			}
+/*============================================================================================================================================================
+Unlike most of other unit conversions, which mostly have text inputs, the flight time calculation uses time input elements, and they are created in the createTimeInputs function instead in the createTextBox function 
+============================================================================================================================================================*/
+
+		
+		function createTimeInputs(){
+			
+			var flightTimeContainer = document.createElement("div");
+			flightTimeContainer.setAttribute("id", "flightTime");
+			
+			var to = document.createElement("p");
+			to.setAttribute("class", "fromTo");
+			to.innerHTML = "-";
+
+			var startTimeInput = document.createElement("input");
+			
+			startTimeInput.setAttribute("type", "time");
+			startTimeInput.setAttribute("class", "startEndTimes");
+			startTimeInput.setAttribute("id", "startTime");
+					
+			var endTimeInput = document.createElement("input"); 
+
+			endTimeInput.setAttribute("type", "time");
+			endTimeInput.setAttribute("class", "startEndTimes");
+			endTimeInput.setAttribute("id", "endTime");
+						
+			var resultInput = document.createElement("input");
+			
+			resultInput.setAttribute("type", "text");
+			resultInput.setAttribute("class", "startEndTimes");
+			resultInput.setAttribute("id", "duration");
+			resultInput.setAttribute("placeholder", "Flight Duration");
+			resultInput.readOnly = "true"; 			 
+			 
+			
+			getDisplay.appendChild(flightTimeContainer); 
+			
+			flightTimeContainer.appendChild(startTimeInput);
+			flightTimeContainer.appendChild(to); 
+			flightTimeContainer.appendChild(endTimeInput); 
+			
+			getDisplay.appendChild(resultInput);
+			
+			getConvertBtn.innerHTML = "Calculate"; 
+		}
+
+		var getTime = document.getElementById("time");
+		getTime.addEventListener("click", createTimeInputs); 
+		
+
+		//Gets the flight start time and flight end time and adds them to the current date
+		function time(){
+
+			let getStartTime = document.getElementById("startTime");
+			let getEndTime = document.getElementById("endTime");
+			
+			let startTime;
+			let endTime;		
+			
+			if(getStartTime != null && getEndTime != null){
+				if(getStartTime.value != null && getEndTime.value != null){
+
+					let year = new Date().getFullYear(); 
+					let month = new Date().getMonth();
+					let date = new Date().getDate(); 
+
+					let startHours = getStartTime.value.split(":")[0];
+					let startMinutes = getStartTime.value.split(":")[1];
+
+					let endHours = getEndTime.value.split(":")[0];
+					let endMinutes = getEndTime.value.split(":")[1];
+									
+					startTime = new Date(year, month, date, startHours, startMinutes);
+					endTime = new Date(year, month, date, endHours, endMinutes);
+
+					//If user enters a lower value for the end time we assume the flight ends the next day, so we add one day to the start time
+					if(startTime > endTime){
+						endTime = endTime.setDate(endTime.getDate() + 1); 
+						endTime = new Date(endTime); 
+					}
+				}
+			}
+						
+			const startEnd = {start:startTime, end:endTime};
+
+			return startEnd; 
+		}
+
+		//Calculates the difference between the start time and end time and converts the resulting milliseconds to hours and minutes
+		function millisecondsToHours(){
+
+			let getDuration = document.getElementById("duration"); 
+
+			let start = time().start;
+			let end = time().end;
+
+			let milliseconds = end - start; 
+
+			let seconds = milliseconds / 1000; 
+			let minutes = seconds / 60; 
+			let hours = minutes / 60; 
+			let minutesOverFullHour = minutes % 60; 
+			
+			//Adds a zero before hours and minutes if they are lower than 10 
+			hours = Math.floor(hours) < 10 ? "0" + Math.floor(hours) : Math.floor(hours); 
+			minutesOverFullHour = minutesOverFullHour < 10 ? "0" + minutesOverFullHour : minutesOverFullHour; 
+
+			if(!isNaN(hours) && !isNaN(minutesOverFullHour) && getDuration != null){
+
+				let totalTime = `${hours}h ${minutesOverFullHour}`;
+				let timeDecimal = toDecimalTime(minutes); 
+
+				getDuration.value = `${totalTime} (${timeDecimal})`;
+			}			
+		}
+
+		//Creates a decimal version of the flight time 
+		function toDecimalTime(minutes){
+			
+			var decimalTime = minutes / 60;
+
+			return decimalTime.toFixed(1); 
+		}
+		
+
+					
+		function temperature(){			
+			const values = getUserInput();
+			let unit = values[0];
+			let quantity = values[1];
+			
+			let celsius;
+			let fahrenheit;
+			let kelvin; 
+			
+			var getCelsius = document.getElementById("Celsius"); 
+			var getFahrenheit = document.getElementById("Fahrenheit");
+			var getKelvin = document.getElementById("Kelvin"); 
+						
+			switch(unit){
+				case "Celsius": 
+				fahrenheit = (quantity * 9 / 5) + 32; 
+				kelvin = quantity + 273.15; 
+
+				getFahrenheit.value = fahrenheit.toFixed(2) + " °F";
+				getCelsius.value = quantity.toFixed(2) + " °C";
+				getKelvin.value = kelvin.toFixed(2) + " K"; 
+				break;
+
+				case "Fahrenheit":
+				celsius = (quantity - 32) * 5 / 9;
+				kelvin = (quantity - 32) * 5 / 9 + 273.15; 
+
+				getCelsius.value = celsius.toFixed(2) + " °C";
+				getFahrenheit.value = quantity + " °F"; 
+				getKelvin.value = kelvin.toFixed(2) + " K"; 
+				break; 
+
+				case "Kelvin":
+				celsius = quantity - 273.15; 
+				fahrenheit = (quantity - 273.15) * 9 / 5 + 32; 
+
+				getCelsius.value = celsius.toFixed(2) + " °C";
+				getFahrenheit.value = fahrenheit.toFixed(2) + " °F"; 
+				getKelvin.value = quantity.toFixed(2) + " K"; 
+			}
+		}
+
+		//Since the ISA Deviation text box only displays the results and never gets user input, it's set to read-only. 
+
+		function setIsaDeviationReadOnly(){
+			var getIsaTxt = document.getElementById("ISA Deviation");
+			getConvertBtn.innerHTML = "Calculate ISA Deviation"; 
+			getIsaTxt.setAttribute("readOnly", true); 
+		}
+
+		getIsaBtn = document.getElementById("isa"); 
+		getIsaBtn.addEventListener("click", setIsaDeviationReadOnly); 
+
+		
+		function isaDeviation(){
+			
+			let getTemperature = document.getElementById("Temperature (°C)");
+			let getElevation = document.getElementById("Elevation (ft)");
+			let getIsaDeviation = document.getElementById("ISA Deviation");
+
+			if(validation(getTemperature, getElevation)){
+				let temperature = getTemperature.value;
+				let elevation = getElevation.value; 
+				let isaDeviation = temperature - (15 - elevation / 1000 * 2); 
+				
+				getTemperature.value = temperature + " °C";
+				getElevation.value = elevation + " ft"; 
+
+
+				getIsaDeviation.value = isaDeviation >= 0 ? `ISA +${isaDeviation.toFixed(0)}` : `ISA ${isaDeviation.toFixed(0)}`; 
+
+
+				getTemperature.addEventListener("click", ()=>{if(getIsaDeviation.value !== ""){getTemperature.value = ""; getElevation.value = ""; getIsaDeviation.value = null;}}); 
+
+				getElevation.addEventListener("click", ()=>{if(getIsaDeviation.value !== ""){getTemperature.value = ""; getElevation.value = ""; getIsaDeviation.value = null;}});
+			}
+
+			
+		}
+
+		//This validation only handles the ISA Deviation because the rest of input elements are handled through the getUserInput function. ISA Deviation is specific because it's the only calculation that involves 2 different values entered by the user. 
+
+		function validation(temperature, elevation){
+			if(!temperature || !elevation){
+				return false;
+			}
+			if(temperature.value == "" || elevation.value == ""){
+				return false;
+			}
+			if(isNaN(temperature.value) || isNaN(elevation.value)){
+				return false; 
+			}
+			return true; 
+		}
+		 
+		function distance(){
+			const values = getUserInput();
+			let unit = values[0];
+			let quantity = values[1];
+
+			let statMiles;
+			let nmi;
+			let km;
+			let m;
+			let ft;
+
+			var getStatuteMiles = document.getElementById("Statute Miles");
+			var getNauticalMiles = document.getElementById("Nautical Miles");
+			var getKilometers = document.getElementById("Kilometers"); 
+			var getMeters = document.getElementById("Meters");
+			var getFeet = document.getElementById("Feet"); 
+
+			switch(unit){
+				case "Statute Miles":
+				nmi = quantity * 0.868976; 
+				km = quantity * 1.60934;
+				m = quantity * 1609.34;
+				ft = quantity * 5280; 
+
+				getNauticalMiles.value = nmi.toFixed(2) + " NM";
+				getKilometers.value = km.toFixed(2) + " KM"; 
+				getMeters.value = m.toFixed(2) + " m"; 
+				getFeet.value = ft.toFixed(2) + " ft"; 
+				getStatuteMiles.value = quantity + " SM";
+				break;
+
+				case "Nautical Miles":
+				statMiles = quantity * 1.15078; 
+				km = quantity * 1.852;
+				m = quantity * 1852;
+				ft = quantity * 6076.12;
+
+				getStatuteMiles.value = statMiles.toFixed(2) + " SM";
+				getKilometers.value = km.toFixed(2) + " KM";
+				getMeters.value = m.toFixed(2) + " m";
+				getFeet.value = ft.toFixed(2) + " ft"; 
+				getNauticalMiles.value = quantity + " NM";
+				break;
+
+				case "Kilometers":
+				statMiles = quantity / 1.609; 
+				nmi = quantity / 1.852; 
+				m = quantity * 1000; 
+				ft = quantity * 3280.84; 
+
+				getStatuteMiles.value = statMiles.toFixed(2) + " SM";
+				getNauticalMiles.value = nmi.toFixed(2) + " NM";
+				getMeters.value = m + " m";
+				getFeet.value = ft.toFixed(2) + " ft";
+				getKilometers.value = quantity + " KM"; 
+				break; 
+
+				case "Meters":
+				statMiles = quantity * 0.000621371;
+				nauticalMiles = quantity * 0.000539957;
+				km = quantity * 0.001;
+				ft = quantity * 3.28084; 
+
+				getStatuteMiles.value = statMiles.toFixed(2) + " SM";
+				getNauticalMiles.value = nauticalMiles.toFixed(2) + " NM";
+				getKilometers.value = km.toFixed(2) + " KM";
+				getFeet.value = ft.toFixed(2) + " ft";
+				getMeters.value = quantity + " m";
+				break;
+				
+				case "Feet":
+				statMiles = quantity * 0.000189394;
+				nauticalMiles = quantity * 0.000164579; 
+				km = quantity * 0.0003048; 
+				m = quantity * 0.3048;
+				
+				getStatuteMiles.value = statMiles.toFixed(2) + " SM";
+				getNauticalMiles.value = nauticalMiles.toFixed(2) + " NM";
+				getKilometers.value = km.toFixed(2) + " KM";
+				getMeters.value = m.toFixed(2) + " m";
+				getFeet.value = quantity + " ft"; 
+				break; 
+			}
+		}
+		 
+
+		function volume(){
+			const values = getUserInput();
+			let unit = values[0];
+			let quantity = values[1];
+
+			let liters; 
+			let galUS;
+			let galImperial;
+
+			var getLiters = document.getElementById("Liters"); 
+			var getGal_US = document.getElementById("gal_US");
+			var getGal_Imperial = document.getElementById("gal_Imperial"); 
+
+			switch(unit){
+				case "Liters":
+				galUS = quantity * 0.264172;
+				galImperial = quantity * 0.219969;
+
+				getGal_US.value = galUS.toFixed(2) + " gal (US)";
+				getGal_Imperial.value = galImperial.toFixed(2) + " gal (Imperial)";
+				getLiters.value = quantity + " l";
+				break;
+
+				case "gal_US":
+				liters = quantity * 3.78541;
+				galImperial = quantity / 1.20095;
+
+				getLiters.value = liters.toFixed(2) + " l";
+				getGal_Imperial.value = galImperial.toFixed(2) + " gal (Imperial)";
+				getGal_US.value = quantity + " gal (US)";
+				break;
+
+				case "gal_Imperial":
+				liters = quantity * 4.54609;
+				galUS = quantity * 1.20095;
+
+				getLiters.value = liters.toFixed(2) + " l";
+				getGal_US.value = galUS.toFixed(2) + " gal (US)";
+				getGal_Imperial.value = quantity + " gal (Imperial)"; 
+				break; 
+			}
+		}
+
+		function torque(){
+			const values = getUserInput();
+			let unit = values[0];
+			let quantity = values[1];
+
+			let newtonMetre;
+			let footPound;
+			let inchPound; 
+
+			var getNewtonMetre = document.getElementById("Newton Metre");
+			var getFootPound = document.getElementById("Foot Pound");
+			var getInchPound = document.getElementById("Inch Pound"); 
+
+			switch(unit){
+				case "Newton Metre":
+				newtonMetre = quantity;
+				footPound = quantity * 0.7376; 
+				inchPound = quantity * 8.8507; 
+
+				getNewtonMetre.value = quantity.toFixed(2) + " Nm"; 
+				getFootPound.value = footPound.toFixed(2) + " ft-lb"; 
+				getInchPound.value = inchPound.toFixed(2) + " in-lb"; 
+				break;
+
+				case "Foot Pound":
+				newtonMetre = quantity * 1.35582;
+				footPound = quantity;
+				inchPound = quantity * 12; 
+
+				getNewtonMetre.value = newtonMetre.toFixed(2) + " Nm"; 
+				getFootPound.value = quantity.toFixed(2) + " ft-lb"; 
+				getInchPound.value = inchPound.toFixed(2) + " in-lb";
+				break;
+
+				case "Inch Pound":
+				newtonMetre = quantity * 0.112985; 
+				footPound = quantity * 0.08333;
+				inchPound = quantity; 
+
+				getNewtonMetre.value = newtonMetre.toFixed(2) + " Nm"; 
+				getFootPound.value = footPound.toFixed(2) + " ft-lb"; 
+				getInchPound.value = quantity.toFixed(2) + " in-lb";
+				break; 
+			}
+		}
+		
+
+		//Calculate sine or cosine of an angle 
+
+		function cos(deg){
+			var rad = (Math.PI / 180) * deg;
+
+		  	return Math.cos(rad); 
+		}
+
+		function sin(deg){
+			var rad = (Math.PI / 180) * deg;
+
+		  	return Math.sin(rad); 
+		}
+
+		function windValidation(getRunwayDirection, getWindDirection, getWindSpeed){
+			if(!getRunwayDirection || !getWindDirection || !getWindSpeed){
+				return false; 
+			}
+			if(getRunwayDirection.value == "" || getWindDirection.value == "" || getWindSpeed.value == ""){
+				return false;
+			}
+			if(isNaN(getRunwayDirection.value) || isNaN(getWindDirection.value) || isNaN(getWindSpeed.value)){
+				return false; 
+			}
+			return true; 
+		}
+
+
+		function windComponent(){
+			var getRunwayDirection = document.getElementById("Runway direction");
+			var getWindDirection = document.getElementById("Wind direction");
+			var getWindSpeed = document.getElementById("Wind speed");
+
+			if(windValidation(getRunwayDirection, getWindDirection, getWindSpeed)){
+				var runwayDirection = getRunwayDirection.value; 
+				var windDirection = getWindDirection.value;
+				var windSpeed = getWindSpeed.value; 
+
+				let userInput = document.createElement("span");
+				let result = document.createElement("span"); 
+				let lineBreak = document.createElement("br");
+
+				userInput.setAttribute("class", "windUserInput");
+				result.setAttribute("class", "windResult"); 
+
+				var userInputValue = `Runway direction: ${runwayDirection} deg<br> Wind direction: ${windDirection} deg<br>Wind speed: ${windSpeed} knots`; 
+				userInput.innerHTML = userInputValue; 
+								
+				var angle = runwayDirection - windDirection;
+			
+				var headwind = cos(angle) * windSpeed;
+				var crosswind = sin(angle) * windSpeed;
+
+				clearDisplay(); 
+				
+				if(headwind < 0){
+					result.innerHTML = `Tailwind: ${Math.abs(headwind.toFixed(0))} knots<br> Crosswind: ${crosswind.toFixed(0)} knots`;
+					getDisplay.appendChild(userInput);
+					getDisplay.appendChild(lineBreak);
+					getDisplay.appendChild(result);
+				}else{
+					result.innerHTML = `Headwind: ${headwind.toFixed(0)} knots<br> Crosswind: ${crosswind.toFixed(0)} knots`; 
+					getDisplay.appendChild(userInput);
+					getDisplay.appendChild(lineBreak);
+					getDisplay.appendChild(result);
+				}
+			}
+		} 
+
+		var getWind = document.getElementById("wind");
+		getWind.addEventListener("click", ()=>{getConvertBtn.innerHTML = "Calculate Wind Component"}); 
+		
+
+		//Sets a predefined specific gravity value of 0.8 kg/l 
+		function defaultSGValue(){
+			let specialGravity = document.getElementById("SG"); 
+			specialGravity.value = 0.8; 
+		}
+
+		var getFuelWeightByVol = document.getElementById("fuelWeightByVol");
+		getFuelWeightByVol.addEventListener("click", defaultSGValue); 
+
+		function fuelWeightByVolume(){
+			const values = getUserInput();
+			let unit = values[2];
+			let quantity = values[3];
+
+			let litresFuel;
+			let usGallons;
+			let impGallons;
+			let density;
+			let kilograms;
+			let pounds;
+
+			let getLitresFuel = document.getElementById("Litres (Fuel)");
+			let getUsGallonsFuel = document.getElementById("US Gallons (Fuel)");
+			let getKilogramsFuel = document.getElementById("Kilograms (Fuel)");
+			let getPoundsFuel = document.getElementById("Pounds (Fuel)");
+
+			let getSG = document.getElementById("SG"); 
+			if(getSG){
+				density = getSG.value;
+			}
+						
+
+			switch(unit){
+				case "Litres (Fuel)":
+				litresFuel = quantity;
+				usGallonsFuel = quantity / 3.785; 
+				impGallonsFuel= quantity / 4.54609; 
+				kilogramsFuel = quantity * density;
+				poundsFuel = kilogramsFuel * 2.20462;
+				 
+				getLitresFuel.value = quantity.toFixed(2) + " l";
+				getUsGallonsFuel.value = usGallonsFuel.toFixed(2) + " US Gallons";
+				getKilogramsFuel.value = kilogramsFuel.toFixed(2) + " kg"; 
+				getPoundsFuel.value = poundsFuel.toFixed(2) + " lbs"; 
+				break;
+
+				case "US Gallons (Fuel)":
+				usGallonsFuel = quantity;
+				litresFuel = quantity * 3.7854; 
+				impGallonsFuel = quantity / 1.20095; 
+				kilogramsFuel = litresFuel * density;
+				poundsFuel = kilogramsFuel * 2.20462; 
+								 
+				getLitresFuel.value = litresFuel.toFixed(2) + " l";
+				getUsGallonsFuel.value = quantity.toFixed(2) + " US Gallons";
+				getKilogramsFuel.value = kilogramsFuel.toFixed(2) + " kg"; 
+				getPoundsFuel.value = poundsFuel.toFixed(2) + " lbs"; 
+				break;
+
+				case "Kilograms (Fuel)":
+				litresFuel = quantity / density;
+				usGallonsFuel = litresFuel / 3.785;
+				poundsFuel = quantity * 2.20462; 			
+
+				getLitresFuel.value = litresFuel.toFixed(2) + " l";
+				getUsGallonsFuel.value = usGallonsFuel.toFixed(2) + " US Gallons";
+				getKilogramsFuel.value = quantity.toFixed(2) + " kg";
+				getPoundsFuel.value = poundsFuel.toFixed(2) + " lbs"; 
+				break;
+
+				case "Pounds (Fuel)": 
+				litresFuel = quantity / 2.20462 / density; 
+				usGallonsFuel = litresFuel / 3.7854;
+				kilogramsFuel = quantity / 2.20462; 
+				poundsFuel = quantity; 
+				
+				getLitresFuel.value = litresFuel.toFixed(2) + " l"; 
+				getUsGallonsFuel.value = usGallonsFuel.toFixed(2) + " US Gallons";
+				getKilogramsFuel.value = kilogramsFuel.toFixed(2) + " kg";
+				getPoundsFuel.value = quantity.toFixed(2) + " lbs"; 
+			}
+		}
+		
+	</script>
+</body>
+</html>
